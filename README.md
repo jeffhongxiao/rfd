@@ -11,6 +11,12 @@ Hot deals on the command line.
 pip install rfd
 ```
 
+### run in local development environment
+
+```bash
+python -m rfd.rfd_cli --help
+```
+
 ## Usage
 
 ![rfd_demo_gif](https://user-images.githubusercontent.com/4519234/47625817-d3375500-dafd-11e8-9d86-491d4a4fb225.gif)
