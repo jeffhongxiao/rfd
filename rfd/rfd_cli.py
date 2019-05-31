@@ -80,10 +80,7 @@ def posts(post_id, head, tail):
         sys.exit(1)
 
     # Tail overrides head
-    if tail > 0:
-        count = tail
-    else:
-        count = head
+    count = head if tail <= 0 else tail
 
     try:
         click.echo("-" * get_terminal_width())

@@ -6,14 +6,12 @@ except ImportError:
     JSONDecodeError = ValueError
 import logging
 from math import ceil
+from urllib.parse import urlparse
+
 import requests
 from bs4 import BeautifulSoup
-from rfd.constants import API_BASE_URL
 
-try:
-    from urllib.parse import urlparse  # python 3
-except ImportError:
-    from urlparse import urlparse  # python 2
+from rfd.constants import API_BASE_URL
 
 
 def build_web_path(slug):
@@ -142,13 +140,15 @@ def get_posts(post, count=5, tail=False, per_page=40):
     Yields:
         list(dict): body, score, and user
     """
+    # print('get_posts(): post = %s, count = %d' % (post, count))
 
     post_id = __get_post_id(post)
     url = "{}/api/topics/{}/posts?per_page=40&page=1".format(API_BASE_URL, post_id)
     print('url = %s' % url)
     response = requests.get(url)
-    total_posts = response.json().get("pager").get("total")
-    total_pages = response.json().get("pager").get("total_pages")
+    pager = response.json().get("pager")
+    total_posts = pager.get("total")
+    total_pages = pager.get("total_pages")
 
     if count == 0:
         pages = total_pages
@@ -194,7 +194,7 @@ def get_posts(post, count=5, tail=False, per_page=40):
         for _post in _posts:
             # count -= 1
             # if count < 0:
-            #     return
+            #     return results
             
             # Sometimes votes is null
             if _post.get("votes") is not None:
@@ -207,7 +207,6 @@ def get_posts(post, count=5, tail=False, per_page=40):
                 "score": calculated_score,
                 "user": users[_post.get("author_id")],
             }
-            # yield result
             results.append(result)
 
-    return results
+    return results[:count]
