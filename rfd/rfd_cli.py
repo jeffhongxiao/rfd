@@ -87,6 +87,8 @@ def posts(post_id, head, tail):
 
     try:
         click.echo("-" * get_terminal_width())
+        # all_posts_generator = get_posts(post=post_id, count=count, tail=tail > 0)
+        # for post in all_posts_generator:
         for post in get_posts(post=post_id, count=count, tail=tail > 0):
             click.echo(
                 " -"

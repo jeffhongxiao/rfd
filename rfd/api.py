@@ -124,6 +124,14 @@ def parse_threads(api_response, limit):
     return threads[:limit]
 
 
+def __get_post_id(post):
+    if is_valid_url(post):
+        return extract_post_id(post)
+    elif is_int(post):
+        return post
+    else:
+        raise ValueError()
+
 def get_posts(post, count=5, tail=False, per_page=40):
     """Retrieve posts from a thread.
 
@@ -134,16 +142,11 @@ def get_posts(post, count=5, tail=False, per_page=40):
     Yields:
         list(dict): body, score, and user
     """
-    if is_valid_url(post):
-        post_id = extract_post_id(post)
-    elif is_int(post):
-        post_id = post
-    else:
-        raise ValueError()
 
-    response = requests.get(
-        "{}/api/topics/{}/posts?per_page=40&page=1".format(API_BASE_URL, post_id)
-    )
+    post_id = __get_post_id(post)
+    url = "{}/api/topics/{}/posts?per_page=40&page=1".format(API_BASE_URL, post_id)
+    print('url = %s' % url)
+    response = requests.get(url)
     total_posts = response.json().get("pager").get("total")
     total_pages = response.json().get("pager").get("total_pages")
 
@@ -168,6 +171,7 @@ def get_posts(post, count=5, tail=False, per_page=40):
         start_page, start_post = 0, 0
 
     # Go through as many pages as necessary
+    results = []
     for page in range(start_page, pages + 1):
         response = requests.get(
             "{}/api/topics/{}/posts?per_page={}&page={}".format(
@@ -186,17 +190,24 @@ def get_posts(post, count=5, tail=False, per_page=40):
             else:
                 _posts = _posts[:start_post]
 
+        print(len(_posts))
         for _post in _posts:
-            count -= 1
-            if count < 0:
-                return
+            # count -= 1
+            # if count < 0:
+            #     return
+            
             # Sometimes votes is null
             if _post.get("votes") is not None:
                 calculated_score = calculate_score(_post)
             else:
                 calculated_score = 0
-            yield {
+
+            result = {
                 "body": strip_html(_post.get("body")),
                 "score": calculated_score,
                 "user": users[_post.get("author_id")],
             }
+            # yield result
+            results.append(result)
+
+    return results
