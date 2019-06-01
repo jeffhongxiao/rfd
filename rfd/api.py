@@ -131,7 +131,7 @@ def __get_post_id(post):
         raise ValueError()
 
 
-def get_posts(post, count=5, is_tail=False, per_page=40):
+def get_posts(post, count=5, per_page=40):
     """Retrieve posts from a thread.
 
     Args:
@@ -176,7 +176,7 @@ def get_posts(post, count=5, is_tail=False, per_page=40):
             }
             results.append(result)
 
-    return results
+    return results[:count]
 
 
 def find_totals(post_id):
