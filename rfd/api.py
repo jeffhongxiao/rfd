@@ -130,7 +130,7 @@ def __get_post_id(post):
     else:
         raise ValueError()
 
-def get_posts(post, count=5, tail=False, per_page=40):
+def get_posts(post, count=5, is_tail=False, per_page=40):
     """Retrieve posts from a thread.
 
     Args:
@@ -157,12 +157,12 @@ def get_posts(post, count=5, tail=False, per_page=40):
             count = total_posts
         pages = ceil(count / per_page)
     else:
-        if tail:
+        if is_tail:
             pages = total_pages
         else:
             pages = 1
 
-    if tail:
+    if is_tail:
         start_page = ceil((total_posts + 1 - count) / per_page)
         start_post = (total_posts + 1 - count) % per_page
         if start_post == 0:
@@ -185,7 +185,7 @@ def get_posts(post, count=5, tail=False, per_page=40):
 
         # Determine which post to start with (for --tail)
         if page == start_page and not start_post == 0:
-            if tail:
+            if is_tail:
                 _posts = _posts[start_post - 1 :]
             else:
                 _posts = _posts[:start_post]
