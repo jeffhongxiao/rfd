@@ -143,32 +143,18 @@ def get_posts(post, count=5, is_tail=False, per_page=40):
     """
     # print('get_posts(): post = %s, count = %d' % (post, count))
 
-    post_id = __get_post_id(post)
-    total_pages, total_posts = find_totals(post_id)
+    total_pages, total_posts = find_totals(__get_post_id(post))
 
-    if count == 0:
+    if count == 0 or count > total_posts:
+        count = total_posts
         pages = total_pages
-        
-    if count > per_page:
-        if count > total_posts:
-            count = total_posts
-        pages = ceil(count / per_page)
     else:
-        if is_tail:
-            pages = total_pages
-        else:
-            pages = 1
-
-    start_page, start_post = 0, 0
-    if is_tail:
-        start_page = ceil((total_posts + 1 - count) / per_page)
-        start_post = (total_posts + 1 - count) % per_page
-        if start_post == 0:
-            start_post = per_page
+        pages = ceil(count / per_page) if count > per_page else 0
 
     # Go through as many pages as necessary
     results = []
-    for page in range(start_page, pages + 1):
+    for page in range(0, pages + 1):
+        post_id = __get_post_id(post)
         response = requests.get(
             "{}/api/topics/{}/posts?per_page={}&page={}".format(
                 API_BASE_URL, post_id, get_safe_per_page(per_page), page
@@ -176,27 +162,12 @@ def get_posts(post, count=5, is_tail=False, per_page=40):
         )
 
         users = users_to_dict(response.json().get("users"))
-
         _posts = response.json().get("posts")
-
-        # Determine which post to start with (for --tail)
-        if page == start_page and not start_post == 0:
-            if is_tail:
-                _posts = _posts[start_post - 1:]
-            else:
-                _posts = _posts[:start_post]
 
         print(len(_posts))
         for _post in _posts:
-            # count -= 1
-            # if count < 0:
-            #     return results
-
             # Sometimes votes is null
-            if _post.get("votes") is not None:
-                calculated_score = calculate_score(_post)
-            else:
-                calculated_score = 0
+            calculated_score = 0 if _post.get("votes") is None else calculate_score(_post)
 
             result = {
                 "body": strip_html(_post.get("body")),
@@ -205,7 +176,7 @@ def get_posts(post, count=5, is_tail=False, per_page=40):
             }
             results.append(result)
 
-    return results[:count]
+    return results
 
 
 def find_totals(post_id):
