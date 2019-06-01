@@ -130,6 +130,7 @@ def __get_post_id(post):
     else:
         raise ValueError()
 
+
 def get_posts(post, count=5, is_tail=False, per_page=40):
     """Retrieve posts from a thread.
 
@@ -143,15 +144,11 @@ def get_posts(post, count=5, is_tail=False, per_page=40):
     # print('get_posts(): post = %s, count = %d' % (post, count))
 
     post_id = __get_post_id(post)
-    url = "{}/api/topics/{}/posts?per_page=40&page=1".format(API_BASE_URL, post_id)
-    print('url = %s' % url)
-    response = requests.get(url)
-    pager = response.json().get("pager")
-    total_posts = pager.get("total")
-    total_pages = pager.get("total_pages")
+    total_pages, total_posts = find_totals(post_id)
 
     if count == 0:
         pages = total_pages
+        
     if count > per_page:
         if count > total_posts:
             count = total_posts
@@ -162,13 +159,12 @@ def get_posts(post, count=5, is_tail=False, per_page=40):
         else:
             pages = 1
 
+    start_page, start_post = 0, 0
     if is_tail:
         start_page = ceil((total_posts + 1 - count) / per_page)
         start_post = (total_posts + 1 - count) % per_page
         if start_post == 0:
             start_post = per_page
-    else:
-        start_page, start_post = 0, 0
 
     # Go through as many pages as necessary
     results = []
@@ -186,7 +182,7 @@ def get_posts(post, count=5, is_tail=False, per_page=40):
         # Determine which post to start with (for --tail)
         if page == start_page and not start_post == 0:
             if is_tail:
-                _posts = _posts[start_post - 1 :]
+                _posts = _posts[start_post - 1:]
             else:
                 _posts = _posts[:start_post]
 
@@ -195,7 +191,7 @@ def get_posts(post, count=5, is_tail=False, per_page=40):
             # count -= 1
             # if count < 0:
             #     return results
-            
+
             # Sometimes votes is null
             if _post.get("votes") is not None:
                 calculated_score = calculate_score(_post)
@@ -210,3 +206,14 @@ def get_posts(post, count=5, is_tail=False, per_page=40):
             results.append(result)
 
     return results[:count]
+
+
+def find_totals(post_id):
+    url = "{}/api/topics/{}/posts?per_page=40&page=1".format(
+        API_BASE_URL, post_id)
+    print('url = %s' % url)
+    response = requests.get(url)
+    pager = response.json().get("pager")
+    total_posts = pager.get("total")
+    total_pages = pager.get("total_pages")
+    return total_pages, total_posts
