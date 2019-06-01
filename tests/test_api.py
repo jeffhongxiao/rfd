@@ -1,4 +1,8 @@
-from rfd.api import build_web_path, extract_post_id, parse_threads
+from rfd.api import build_web_path, extract_post_id, parse_threads, __calc_pages
+
+
+def test_dummy():
+    assert 2 + 2 == 4
 
 
 def test_build_web_path():

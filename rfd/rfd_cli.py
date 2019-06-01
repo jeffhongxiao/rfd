@@ -10,7 +10,6 @@ from rfd.api import parse_threads, get_threads, get_posts
 from rfd.__version__ import version as current_version
 
 init()
-print()
 
 logging.getLogger()
 logging.getLogger().setLevel(logging.INFO)
@@ -57,12 +56,12 @@ def display_version():
     help="(for incremental crawling): the post number to start from, default 0 means starting from 0th post.",
 )
 @click.option(
-    "--head", 
+    "--count", 
     default=0, 
     help="Number of posts to be crawled. Default is 0, for all posts"
 )
 @click.argument("post_id")
-def posts(post_id, start, head):
+def posts(post_id, start, count):
     """Displays posts in a specific thread.
 
     post_id can be a full url or post id only
@@ -74,25 +73,24 @@ def posts(post_id, start, head):
     post_id: 2173603
     """
 
-    check_input(head)
+    check_input(count)
     check_input(start)
-    count = head
 
     try:
-        click.echo("-" * get_terminal_width())
-        # all_posts_generator = get_posts(post=post_id, count=count, tail=tail > 0)
+        # click.echo("-" * get_terminal_width())
+        
+        # all_posts_generator = get_posts(post=post_id, start=start, count=count)
         # for post in all_posts_generator:
-        for post in get_posts(post=post_id, count=count):
+        for post in get_posts(post=post_id, start=start, count=count):
             click.echo(
                 " -"
                 + get_vote_color(post.get("score"))
                 + Fore.RESET
-                + post.get("body")
+                # + post.get("body")
                 + Fore.YELLOW
                 + " ({})".format(post.get("user"))
             )
             click.echo(Style.RESET_ALL)
-            click.echo("-" * get_terminal_width())
     except ValueError:
         click.echo("Invalid post id.")
         sys.exit(1)

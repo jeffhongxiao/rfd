@@ -131,29 +131,26 @@ def __get_post_id(post):
         raise ValueError()
 
 
-def get_posts(post, count=5, per_page=40):
+def get_posts(post, start, count, per_page=40):
     """Retrieve posts from a thread.
-
-    Args:
-        post (str): either post id or full url
-        count (int, optional): Description
-
-    Yields:
-        list(dict): body, score, and user
     """
-    # print('get_posts(): post = %s, count = %d' % (post, count))
+    print(start, count)
 
     total_pages, total_posts = find_totals(__get_post_id(post))
+    print(total_pages, total_posts)
 
-    if count == 0 or count > total_posts:
-        count = total_posts
-        pages = total_pages
-    else:
-        pages = ceil(count / per_page) if count > per_page else 0
+    if count == 0:
+        print('what does count == 0 mean?')
+
+    if start + count > total_posts:
+        count = total_posts - start
+
+    page_count = __calc_pages(start, count, total_posts, total_pages, per_page)
+    start_page = ceil(start / per_page)
 
     # Go through as many pages as necessary
     results = []
-    for page in range(0, pages + 1):
+    for page in range(start_page, start_page + page_count):
         post_id = __get_post_id(post)
         response = requests.get(
             "{}/api/topics/{}/posts?per_page={}&page={}".format(
@@ -167,7 +164,8 @@ def get_posts(post, count=5, per_page=40):
         print(len(_posts))
         for _post in _posts:
             # Sometimes votes is null
-            calculated_score = 0 if _post.get("votes") is None else calculate_score(_post)
+            calculated_score = 0 if _post.get(
+                "votes") is None else calculate_score(_post)
 
             result = {
                 "body": strip_html(_post.get("body")),
@@ -179,10 +177,19 @@ def get_posts(post, count=5, per_page=40):
     return results[:count]
 
 
+def __calc_pages(start, count, total_posts, total_pages, per_page):
+    if start + count > total_posts:
+        return total_pages
+
+    if count > per_page:
+        return ceil(count / per_page)
+    return 0
+
+
 def find_totals(post_id):
     url = "{}/api/topics/{}/posts?per_page=40&page=1".format(
         API_BASE_URL, post_id)
-    print('url = %s' % url)
+    # print('url = %s' % url)
     response = requests.get(url)
     pager = response.json().get("pager")
     total_posts = pager.get("total")
