@@ -5,7 +5,7 @@ try:
 except ImportError:
     JSONDecodeError = ValueError
 import logging
-from math import ceil
+from math import ceil, floor
 from urllib.parse import urlparse
 
 import requests
@@ -140,13 +140,12 @@ def get_posts(post, start, count, per_page=40):
     print(total_pages, total_posts)
 
     if count == 0:
-        print('what does count == 0 mean?')
-
-    if start + count > total_posts:
+        count = total_posts - start
+    elif start + count > total_posts:
         count = total_posts - start
 
-    page_count = __calc_pages(start, count, total_posts, total_pages, per_page)
     start_page = ceil(start / per_page)
+    page_count = min(total_pages, (start + count) / per_page)
 
     # Go through as many pages as necessary
     results = []
@@ -175,15 +174,6 @@ def get_posts(post, start, count, per_page=40):
             results.append(result)
 
     return results[:count]
-
-
-def __calc_pages(start, count, total_posts, total_pages, per_page):
-    if start + count > total_posts:
-        return total_pages
-
-    if count > per_page:
-        return ceil(count / per_page)
-    return 0
 
 
 def find_totals(post_id):

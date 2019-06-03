@@ -1,4 +1,4 @@
-from rfd.api import build_web_path, extract_post_id, parse_threads, __calc_pages
+from rfd.api import build_web_path, extract_post_id, parse_threads
 
 
 def test_dummy():
